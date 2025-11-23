@@ -16,7 +16,7 @@ const server = Bun.serve<WsData>({
     },
     websocket: {
         open(ws) {
-            console.log(`Client connected: ${ws.data.playerId}`);
+            console.log(`Client connected. Player: ${ws.data.playerId} | Room: ${ws.data.roomId}`);
         },
         message(ws, message) {
             const data = JSON.parse(typeof message === "string" ? message : "");
@@ -35,12 +35,23 @@ const server = Bun.serve<WsData>({
                         payload: data.payload
                     }));
                     break;
+
             }
         },
-        close(ws) {
+        close(ws, code, reason) {
             if (ws.data.roomId) {
                 ws.unsubscribe(ws.data.roomId);
                 server.publish(ws.data.roomId, JSON.stringify({ type: "PLAYER_LEFT" }));
+            }
+
+            const type = code === 1000 ? 'Normal Close' : 'Abnormal Close/Error';
+            console.log(
+                `Connection closed. Player: ${ws.data.playerId} | Room: ${ws.data.roomId} | ${type}`,
+                `Code: ${code} | Reason: ${reason || 'N/A'}`
+            );
+
+            if (code !== 1000 && code !== 1001) {
+                console.error(`Unexpected closure: Code ${code}`);
             }
         },
     },
