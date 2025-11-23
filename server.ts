@@ -22,19 +22,45 @@ const server = Bun.serve<WsData>({
             const data = JSON.parse(typeof message === "string" ? message : "");
 
             switch (data.type) {
-                case "JOIN_ROOM":
+                case "JOIN_ROOM": {
                     const { roomId } = data.payload;
                     ws.data.roomId = roomId;
                     ws.subscribe(roomId);
-                    ws.publish(roomId, JSON.stringify({ type: "PLAYER_JOINED", payload: { playerId: ws.data.playerId } }));
+                    ws.publish(roomId, JSON.stringify({
+                        type: "PLAYER_JOINED",
+                        payload: { playerId: ws.data.playerId }
+                    }));
                     break;
+                }
 
-                case "MAKE_MOVE":
+                case "MAKE_MOVE": {
                     ws.publish(ws.data.roomId, JSON.stringify({
                         type: "OPPONENT_MOVE",
                         payload: data.payload
                     }));
                     break;
+                }
+
+                case "REQUEST_RESTART": {
+                    ws.publish(ws.data.roomId, JSON.stringify({
+                        type: "RESTART_REQUESTED",
+                    }))
+                    break;
+                }
+
+                case "ACCEPT_RESTART_REQUEST": {
+                    ws.publish(ws.data.roomId, JSON.stringify({
+                        type: "RESTART_ACCEPTED",
+                    }))
+                    break;
+                }
+
+                case "REJECT_RESTART_REQUEST": {
+                    ws.publish(ws.data.roomId, JSON.stringify({
+                        type: "RESTART_DENIED",
+                    }))
+                    break;
+                }
 
             }
         },
